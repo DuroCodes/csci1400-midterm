@@ -1,13 +1,9 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
-
 import color
+from typing import Optional
 from entity import Item
 import exceptions
-
-if TYPE_CHECKING:
-    from engine import Engine
-    from entity import Actor, Entity
+from engine import Engine
+from entity import Actor, Entity
 
 
 class Action:

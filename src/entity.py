@@ -1,9 +1,9 @@
 from __future__ import annotations
+import math
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional, Type, Union
+from typing import TYPE_CHECKING, Optional, Type, TypeVar, Union
 from level import Level
 from render_order import RenderOrder
-import math
 
 if TYPE_CHECKING:
     from components.ai import BaseAI
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from components.inventory import Inventory
     from game_map import GameMap
 
+T = TypeVar("T", bound="Entity")
 
 class Entity:
     """
@@ -53,7 +54,7 @@ class Entity:
         self.x += dx
         self.y += dy
 
-    def spawn[T](self: T, gamemap: GameMap, x: int, y: int) -> T:
+    def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         """Spawn a copy of this instance at the given location."""
         clone = deepcopy(self)
         clone.x = x

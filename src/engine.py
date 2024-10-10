@@ -1,17 +1,12 @@
-from __future__ import annotations
 import lzma
 import pickle
-from typing import TYPE_CHECKING
-
 from tcod.console import Console
 from tcod.map import compute_fov
 import exceptions
 from message_log import MessageLog
 import render_functions
-
-if TYPE_CHECKING:
-    from entity import Actor
-    from game_map import GameMap, GameWorld
+from entity import Actor
+from game_map import GameMap, GameWorld
 
 
 class Engine:

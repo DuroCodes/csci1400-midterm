@@ -57,7 +57,7 @@ MainGameEventHandler will become the active handler.
 
 
 class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
-    def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
+    def handle_events(self, event: tcod.event.Event):
         """Handle an event and return the next active event handler."""
         state = self.dispatch(event)
         if isinstance(state, BaseEventHandler):
@@ -65,7 +65,7 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         assert not isinstance(state, Action), f"{self!r} can not handle actions."
         return self
 
-    def on_render(self) -> None:
+    def on_render(self, console: tcod.console.Console) -> None:
         raise NotImplementedError()
 
     def ev_quit(self, _) -> Optional[Action]:
@@ -354,7 +354,7 @@ class InventoryEventHandler(AskUserEventHandler):
             return self.on_item_selected(selected_item)
         return super().ev_keydown(event)
 
-    def on_item_selected(self) -> Optional[ActionOrHandler]:
+    def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Called when the user selects a valid item."""
         raise NotImplementedError()
 
@@ -442,7 +442,7 @@ class SelectIndexHandler(AskUserEventHandler):
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
 
-    def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
+    def on_index_selected(self, x: int, y: int):
         """Return to main handler."""
         return MainGameEventHandler(self.engine)
 
@@ -500,9 +500,9 @@ class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
 
         random_question = random.choice(questions.questions)
 
-        self.question = random_question["question"]
-        self.options = random_question["options"]
-        self.correct_answer = random_question["correct_answer"]
+        self.question = random_question.question
+        self.options = random_question.options
+        self.correct_answer = random_question.correct_answer
 
     def on_render(self, console: tcod.console.Console) -> None:
         super().on_render(console)
@@ -535,18 +535,19 @@ class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
                     "Correct! (+5 HP)", color.health_recovered
                 )
 
-                return TakeStairsAction(self.engine.player).perform()
+                TakeStairsAction(self.engine.player).perform()
+                return actions.WaitAction(self.engine.player)
             else:
                 self.engine.player.fighter.take_damage(5)
                 self.engine.message_log.add_message("Incorrect! (-5 HP)", color.red)
-            return None
+                return actions.WaitAction(self.engine.player)
 
         return super().ev_keydown(event)
 
 
 class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        action = None
+        action: Optional[Action] = None
         key = event.sym
         player = self.engine.player
 
