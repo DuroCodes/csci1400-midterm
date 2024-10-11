@@ -10,9 +10,9 @@ from src.input_handlers import (
     SingleRangedAttackHandler,
     ActionOrHandler,
 )
-from components.base_component import BaseComponent
-from components.ai import ConfusedEnemy
-from components.inventory import Inventory
+from src.components.base_component import BaseComponent
+from src.components.ai import ConfusedEnemy
+from src.components.inventory import Inventory
 
 if TYPE_CHECKING:
     from src.entity import Actor, Item

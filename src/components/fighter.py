@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import color
-from components.base_component import BaseComponent
-from render_order import RenderOrder
-from entity import Actor
+import src.color as color
+from src.components.base_component import BaseComponent
+from src.render_order import RenderOrder
+from src.entity import Actor
 
 
 class Fighter(BaseComponent):
