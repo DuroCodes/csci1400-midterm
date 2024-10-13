@@ -1,6 +1,6 @@
-import color
 from typing import Optional
 from entity import Item
+import color
 import exceptions
 from engine import Engine
 from entity import Actor, Entity

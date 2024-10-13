@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound="Entity")
 
+
 class Entity:
     """
     A generic object to represent players, enemies, items, etc.

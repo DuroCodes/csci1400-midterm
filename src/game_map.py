@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import numpy as np
 from tcod.console import Console
 from typing import TYPE_CHECKING, Iterable, Iterator, Optional
 from entity import Actor, Entity, Item
 import tile_types
-import numpy as np
 
 if TYPE_CHECKING:
     from engine import Engine

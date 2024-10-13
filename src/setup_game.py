@@ -7,7 +7,7 @@ import traceback
 from typing import Optional
 from tcod import libtcodpy
 import tcod
-import color
+import color as color
 from engine import Engine
 import entity_factories
 from game_map import GameWorld

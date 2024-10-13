@@ -4,11 +4,10 @@ import random
 
 import tcod.event
 from tcod import libtcodpy
-from actions import Action, BumpAction, PickupAction, TakeStairsAction, WaitAction
 from typing import Callable, Optional, TYPE_CHECKING, Union
+from entity import Item
 import actions
 import color
-from entity import Item
 import exceptions
 import questions
 import tile_types
@@ -47,7 +46,7 @@ CONFIRM_KEYS = {
     tcod.event.KeySym.KP_ENTER,
 }
 
-ActionOrHandler = Union[Action, "BaseEventHandler"]
+ActionOrHandler = Union[actions.Action, "BaseEventHandler"]
 """An event handler return value which can trigger an action or switch active handlers.
 
 If a handler is returned then it will become the active handler for future events.
@@ -62,13 +61,15 @@ class BaseEventHandler(tcod.event.EventDispatch[ActionOrHandler]):
         state = self.dispatch(event)
         if isinstance(state, BaseEventHandler):
             return state
-        assert not isinstance(state, Action), f"{self!r} can not handle actions."
+        assert not isinstance(
+            state, actions.Action
+        ), f"{self!r} can not handle actions."
         return self
 
     def on_render(self, console: tcod.console.Console) -> None:
         raise NotImplementedError()
 
-    def ev_quit(self, _) -> Optional[Action]:
+    def ev_quit(self, _) -> Optional[actions.Action]:
         raise SystemExit()
 
 
@@ -117,7 +118,7 @@ class EventHandler(BaseEventHandler):
 
         return self
 
-    def handle_action(self, action: Optional[Action]) -> bool:
+    def handle_action(self, action: Optional[actions.Action]) -> bool:
         """Handle actions returned from event methods.
 
         Returns True if the action will advance a turn.
@@ -246,17 +247,17 @@ class LevelUpEventHandler(AskUserEventHandler):
         console.print(
             x=x + 1,
             y=4,
-            string=f"a) Constitution (+20 HP, from {self.engine.player.fighter.max_hp})",
+            string=f"(a) Constitution (+20 HP, from {self.engine.player.fighter.max_hp})",
         )
         console.print(
             x=x + 1,
             y=5,
-            string=f"b) Strength (+1 attack, from {self.engine.player.fighter.power})",
+            string=f"(b) Strength (+1 attack, from {self.engine.player.fighter.power})",
         )
         console.print(
             x=x + 1,
             y=6,
-            string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
+            string=f"(c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -451,13 +452,15 @@ class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
 
     def __init__(
-        self, engine: Engine, callback: Callable[[tuple[int, int]], Optional[Action]]
+        self,
+        engine: Engine,
+        callback: Callable[[tuple[int, int]], Optional[actions.Action]],
     ):
         super().__init__(engine)
 
         self.callback = callback
 
-    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+    def on_index_selected(self, x: int, y: int) -> Optional[actions.Action]:
         return self.callback((x, y))
 
 
@@ -468,7 +471,7 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         self,
         engine: Engine,
         radius: int,
-        callback: Callable[[tuple[int, int]], Optional[Action]],
+        callback: Callable[[tuple[int, int]], Optional[actions.Action]],
     ):
         super().__init__(engine)
 
@@ -490,11 +493,11 @@ class AreaRangedAttackHandler(SelectIndexHandler):
             clear=False,
         )
 
-    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+    def on_index_selected(self, x: int, y: int) -> Optional[actions.Action]:
         return self.callback((x, y))
 
 
-class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
+class MultipleChoiceQuestionHandler(AskUserEventHandler):
     def __init__(self, engine: Engine):
         super().__init__(engine)
 
@@ -511,7 +514,7 @@ class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
             x=0,
             y=0,
             width=len(self.question) + 2,
-            height=15,
+            height=len(self.options) + 4,
             title="Multiple Choice Question",
             clear=True,
             fg=(255, 255, 255),
@@ -535,7 +538,7 @@ class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
                     "Correct! (+5 HP)", color.health_recovered
                 )
 
-                TakeStairsAction(self.engine.player).perform()
+                actions.TakeStairsAction(self.engine.player).perform()
                 return actions.WaitAction(self.engine.player)
             else:
                 self.engine.player.fighter.take_damage(5)
@@ -545,22 +548,61 @@ class MultipleChoiceQuestionEventHandler(AskUserEventHandler):
         return super().ev_keydown(event)
 
 
+class HelpScreenEventHandler(EventHandler):
+    def on_render(self, console: tcod.console.Console) -> None:
+        super().on_render(console)
+
+        console.draw_frame(
+            x=0,
+            y=0,
+            width=45,
+            height=11,
+            title="Help",
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0),
+        )
+
+        console.print(x=1, y=1, string="Movement Controls", fg=(200, 200, 200))
+        console.print(x=1, y=2, string="W: Up")
+        console.print(x=1, y=3, string="S: Down")
+        console.print(x=1, y=4, string="A: Left")
+        console.print(x=1, y=5, string="D: Right")
+        console.print(x=1, y=6, string="Q: Up-Left")
+        console.print(x=1, y=7, string="E: Up-Right")
+        console.print(x=1, y=8, string="Z: Down-Left")
+        console.print(x=1, y=9, string="C: Down-Right")
+
+        console.print(x=20, y=1, string="Action Controls", fg=(200, 200, 200))
+        console.print(x=20, y=2, string="G: Pickup Item")
+        console.print(x=20, y=3, string="X: Drop Item")
+        console.print(x=20, y=4, string="I: Inventory")
+        console.print(x=20, y=5, string="O: Character Info")
+        console.print(x=20, y=6, string="H: History")
+        console.print(x=20, y=8, string="T: Take Stairs")
+        console.print(x=20, y=7, string=".: Wait")
+        console.print(x=20, y=9, string="ESC: Quit")
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        return MainGameEventHandler(self.engine)
+
+
 class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
-        action: Optional[Action] = None
+        action: Optional[actions.Action] = None
         key = event.sym
         player = self.engine.player
 
-        if key == tcod.event.KeySym.RETURN:
+        if key == tcod.event.KeySym.t:
             if self.engine.game_map.tiles[player.x, player.y] == tile_types.down_stairs:
-                return MultipleChoiceQuestionEventHandler(engine=self.engine)
+                return MultipleChoiceQuestionHandler(engine=self.engine)
 
         if key in MOVE_KEYS:
             dx, dy = MOVE_KEYS[key]
-            action = BumpAction(player, dx, dy)
+            action = actions.BumpAction(player, dx, dy)
 
         elif key in WAIT_KEYS:
-            action = WaitAction(player)
+            action = actions.WaitAction(player)
 
         elif key == tcod.event.KeySym.ESCAPE:
             raise SystemExit()
@@ -569,16 +611,21 @@ class MainGameEventHandler(EventHandler):
             return HistoryViewer(self.engine)
 
         elif key == tcod.event.KeySym.g:
-            action = PickupAction(player)
+            action = actions.PickupAction(player)
 
         elif key == tcod.event.KeySym.i:
             return InventoryActivateHandler(self.engine)
 
-        elif key == tcod.event.KeySym.BACKSPACE:
+        elif key == tcod.event.KeySym.x:
             return InventoryDropHandler(self.engine)
 
         elif key == tcod.event.KeySym.o:
             return CharacterScreenEventHandler(self.engine)
+
+        elif key == tcod.event.KeySym.SLASH and event.mod & (
+            tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
+        ):
+            return HelpScreenEventHandler(self.engine)
 
         elif key == tcod.event.KeySym.SLASH:
             return LookHandler(self.engine)
@@ -645,42 +692,3 @@ class HistoryViewer(EventHandler):
         else:
             return MainGameEventHandler(self.engine)
         return None
-
-
-class HelpScreenEventHandler(EventHandler):
-    def on_render(self, console: tcod.console.Console) -> None:
-        super().on_render(console)
-
-        console.draw_frame(
-            x=0,
-            y=0,
-            width=35,
-            height=15,
-            title="Help",
-            clear=True,
-            fg=(255, 255, 255),
-            bg=(0, 0, 0),
-        )
-
-        console.print(x=1, y=1, string="W: Move Up")
-        console.print(x=1, y=2, string="S: Move Down")
-        console.print(x=1, y=3, string="A: Move Left")
-        console.print(x=1, y=4, string="D: Move Right")
-        console.print(x=1, y=5, string="Q: Move Up-Left")
-        console.print(x=1, y=6, string="E: Move Up-Right")
-        console.print(x=1, y=7, string="Z: Move Down-Left")
-        console.print(x=1, y=8, string="C: Move Down-Right")
-
-        console.print(x=1, y=5, string="G: Pickup")
-        console.print(x=1, y=6, string="I: Inventory")
-        console.print(x=1, y=7, string="Backspace: Drop Item")
-
-        console.print(x=1, y=9, string="O: Character Information")
-        console.print(x=1, y=10, string=".: Wait")
-        console.print(x=1, y=11, string="ESC: Quit")
-        console.print(x=1, y=12, string="/: Look")
-        console.print(x=1, y=13, string="H: History")
-        console.print(x=1, y=14, string="ENTER: Confirm")
-
-    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
-        return MainGameEventHandler(self.engine)
