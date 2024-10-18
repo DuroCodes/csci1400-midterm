@@ -579,8 +579,8 @@ class HelpScreenEventHandler(EventHandler):
         console.print(x=20, y=4, string="I: Inventory")
         console.print(x=20, y=5, string="O: Character Info")
         console.print(x=20, y=6, string="H: History")
-        console.print(x=20, y=8, string="T: Take Stairs")
-        console.print(x=20, y=7, string=".: Wait")
+        console.print(x=20, y=7, string="T: Take Stairs")
+        console.print(x=20, y=8, string=".: Wait")
         console.print(x=20, y=9, string="ESC: Quit")
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:

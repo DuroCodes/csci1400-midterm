@@ -36,7 +36,8 @@ class Consumable(BaseComponent):
         """Remove the consumed item from its containing inventory."""
         entity = self.parent
         inventory = entity.parent
-        if isinstance(inventory, Inventory):
+
+        if entity in inventory.items:
             inventory.items.remove(entity)
 
 
