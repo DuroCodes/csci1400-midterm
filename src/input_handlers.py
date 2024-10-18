@@ -107,6 +107,7 @@ class EventHandler(BaseEventHandler):
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
         """Handle events for input handlers with an engine."""
         action_or_state = self.dispatch(event)
+
         if isinstance(action_or_state, BaseEventHandler):
             return action_or_state
         if self.handle_action(action_or_state):
@@ -424,6 +425,7 @@ class SelectIndexHandler(AskUserEventHandler):
             return None
         elif key in CONFIRM_KEYS:
             return self.on_index_selected(*self.engine.mouse_location)
+        
         return super().ev_keydown(event)
 
     def ev_mousebuttondown(

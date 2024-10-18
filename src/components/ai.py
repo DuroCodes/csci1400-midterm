@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 import tcod
 
-from src.actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
+from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
-    from src.entity import Actor
+    from entity import Actor
 
 
 class BaseAI(Action):
