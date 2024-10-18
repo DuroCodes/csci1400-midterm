@@ -12,7 +12,6 @@ from src.input_handlers import (
 )
 from src.components.base_component import BaseComponent
 from src.components.ai import ConfusedEnemy
-from src.components.inventory import Inventory
 
 if TYPE_CHECKING:
     from src.entity import Actor, Item
