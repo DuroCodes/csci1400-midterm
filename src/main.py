@@ -3,6 +3,7 @@
 import tcod
 from tcod.console import Console
 import color
+import platform
 import traceback
 import exceptions
 import input_handlers
@@ -19,8 +20,15 @@ def save_game(handler: input_handlers.BaseEventHandler, filename: str) -> None:
 def main() -> None:
     screen_width, screen_height = 80, 50
 
-    tileset = tcod.tileset.load_tilesheet(
-        "Curses_1920x900.png", 16, 16, tcod.tileset.CHARMAP_CP437
+    # load higher resolution tileset on macOS since retina displays are goated
+    tileset = (
+        tcod.tileset.load_tilesheet(
+            "Curses_1920x900.png", 16, 16, tcod.tileset.CHARMAP_CP437
+        )
+        if platform.system() == "Darwin"
+        else tcod.tileset.load_tilesheet(
+            "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+        )
     )
 
     handler = setup_game.MainMenu()
