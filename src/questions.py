@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
 class Question:
     question: str
-    options: List[str]
+    options: list[str]
     correct_answer: int
 
 
